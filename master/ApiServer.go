@@ -1,6 +1,8 @@
 package master
 
 import (
+	"crontab/common"
+	"encoding/json"
 	"net"
 	"net/http"
 	"strconv"
@@ -17,8 +19,39 @@ var (
 )
 
 //保存任务接口
-func handleJobSave(w http.ResponseWriter, r *http.Request) {
-	//任务保存到rtcd中
+func handleJobSave(resp http.ResponseWriter, req *http.Request) {
+	var (
+		err     error
+		postJob string
+		job     common.Job
+		oldJob  *common.Job
+		bytes   []byte
+	)
+	//解析表单
+	if err = req.ParseForm(); err != nil {
+		goto ERR
+	}
+	//获取表单中的字段
+	postJob = req.PostForm.Get("job")
+	//反序列化
+	if err = json.Unmarshal([]byte(postJob), &job); err != nil {
+		goto ERR
+	}
+	//保存到etcd
+	if oldJob, err = G_jobMgr.SaveJob(&job); err != nil {
+		goto ERR
+	}
+	//返回正常回应
+	if bytes, err = common.BuildResponse(0, "success", oldJob); err == nil {
+		resp.Write(bytes)
+	}
+	return
+
+ERR:
+	//返回异常回应
+	if bytes, err = common.BuildResponse(-1, err.Error(), nil); err == nil {
+		resp.Write(bytes)
+	}
 
 }
 

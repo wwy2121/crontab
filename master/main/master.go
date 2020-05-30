@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"runtime"
+	"time"
 )
 
 var (
@@ -48,6 +49,9 @@ func main() {
 	}
 
 	//正常退出
+	for {
+		time.Sleep(100 * time.Second)
+	}
 	return
 ERR:
 	fmt.Print(err)
