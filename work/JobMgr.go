@@ -38,16 +38,17 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 	}
 	for _, kvpair = range getResp.Kvs {
 		if job, err = common.UnpackJob(kvpair.Value); err == nil {
-			//todo
+			jobEvent = common.BuildJobEvent(common.JOB_EVENT_SAVE, job)
+			G_scheduler.PushJobEvent(jobEvent)
 
 		}
 	}
 
 	go func() {
 		watchStartRevision = getResp.Header.Revision + 1
-		watchChan = jobMgr.watcher.Watch(context.TODO(), common.JOB_SAVE_DIR, clientv3.WithRev(watchStartRevision))
+		watchChan = jobMgr.watcher.Watch(context.TODO(), common.JOB_SAVE_DIR, clientv3.WithRev(watchStartRevision), clientv3.WithPrefix())
 		for watchResp = range watchChan {
-			for watchEvent = range watchResp.Events {
+			for _, watchEvent = range watchResp.Events {
 				switch watchEvent.Type {
 				case mvccpb.PUT:
 					if job, err = common.UnpackJob(watchEvent.Kv.Value); err != nil {
@@ -59,8 +60,8 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 					jobName = common.ExtractJobName(string(watchEvent.Kv.Key))
 					job = &common.Job{Name: jobName}
 					jobEvent = common.BuildJobEvent(common.JOB_EVENT_DELETE, job)
-
 				}
+				G_scheduler.PushJobEvent(jobEvent)
 			}
 		}
 
@@ -95,5 +96,6 @@ func InitJobMgr() (err error) {
 		lease:   lease,
 		watcher: watcher,
 	}
+	G_jobMgr.watchJobs()
 	return
 }
