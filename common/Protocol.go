@@ -19,6 +19,11 @@ type Response struct {
 	Data  interface{}
 }
 
+type JobEvent struct {
+	EventType int
+	job       *Job
+}
+
 func BuildResponse(errno int, msg string, data interface{}) (rep []byte, err error) {
 	var (
 		response Response
@@ -46,4 +51,11 @@ func UnpackJob(value []byte) (ret *Job, err error) {
 
 func ExtractJobName(jobKey string) string {
 	return strings.TrimPrefix(jobKey, JOB_SAVE_DIR)
+}
+
+func BuildJobEvent(eventType int, job *Job) (jobEvent *JobEvent) {
+	return &JobEvent{
+		EventType: eventType,
+		job:       job,
+	}
 }

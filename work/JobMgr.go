@@ -31,6 +31,7 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 		watchResp          clientv3.WatchResponse
 		watchEvent         *clientv3.Event
 		jobName            string
+		jobEvent           *common.JobEvent
 	)
 	if getResp, err = jobMgr.kv.Get(context.TODO(), common.JOB_SAVE_DIR, clientv3.WithPrefix()); err != nil {
 		return
@@ -52,10 +53,12 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 					if job, err = common.UnpackJob(watchEvent.Kv.Value); err != nil {
 						continue
 					}
-				//TODO 反序列化job 推送给调度协程
+					jobEvent = common.BuildJobEvent(common.JOB_EVENT_SAVE, job)
 				case mvccpb.DELETE:
 					//TOTO
 					jobName = common.ExtractJobName(string(watchEvent.Kv.Key))
+					job = &common.Job{Name: jobName}
+					jobEvent = common.BuildJobEvent(common.JOB_EVENT_DELETE, job)
 
 				}
 			}
