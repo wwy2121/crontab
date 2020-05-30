@@ -3,8 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <title>分布式crontab</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
 <body>
+<div class="container-fluid">
+    <!--页头-->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="page-header">
+                <h1>管理后台<small>crontab</small></h1>
+            </div>
+        </div>
+    </div>
+    <!--功能按钮-->
+    <div class="row">
+        <div class="col-md-12">
+            <button type="button" class="bt bt-primary">新建任务</button>
+        </div>
+    </div>
+
+    <!--功能列表-->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-default" style="margin-top:20px ">
+                <div class="panel-body">
+                    <table id="job-list" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>任务名字</th>
+                            <th>shell</th>
+                            <th>cron表达式</th>
+                            <th>任务操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        //绑定事件
+        $("#job-list").on("click",".edit-job",function (event) {
+            console.log("编辑按钮")
+        })
+        $("#job-list").on("click",".delete-job",function (event) {
+            console.log("删除按钮")
+        })
+        $("#job-list").on("click",".kill-job",function (event) {
+            console.log("强杀按钮")
+        })
+
+        function rebuildJobList() {
+            $.ajax({
+                url:'/job/list',
+                dataType:'json',
+                success:function (resp) {
+                    if (resp.errno != 0){
+                        return
+                    }
+                    var jobList = resp.Data
+                    $("#job-list tbody").empty()
+                    for (var i=0;i<jobList.length;i++) {
+                        var job = jobList[i];
+                        var tr = $("<tr>")
+                        tr.append($('<td class="job-name">').html(job.name))
+                        tr.append($('<td class="job-command">').html(job.command))
+                        tr.append($('<td class="job-cronExpr">').html(job.cronExpr))
+                        var toolbar = $('<div class="btn-toolbar">')
+                            .append('<button class="btn btn-info edit">编辑<button> ')
+                            .append('<button class="btn btn-info edit">删除<button> ')
+                            .append('<button class="btn btn-info edit">强杀<button> ')
+                        tr.append($('<td>')).append(toolbar)
+                        $("#job-list tbody").append(tr)
+                    }
+                }
+            })
+        }
+        rebuildJobList()
+    })
+</script>
 
 </body>
 </html>
