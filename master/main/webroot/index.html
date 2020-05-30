@@ -5,7 +5,7 @@
     <title>分布式crontab</title>
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
-    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="bootstrap.min.js"></script>
 </head>
 <body>
 <div class="container-fluid">
@@ -47,11 +47,49 @@
         </div>
     </div>
 </div>
+
+
+<div id="edit-modal" class="modal fade" tabindex="-1" role="dialog" style="display:none">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+
+                <h4 class="modal-title">编辑任务</h4>
+            </div>
+            <div class="modal-body">
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="edit-name">任务名字</label>
+                            <input type="text" class="form-control" id="edit-name" placeholder="任务名字">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-name">shell命令</label>
+                            <input type="text" class="form-control" id="edit-command" placeholder="shell命令">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-name">cron表达式</label>
+                            <input type="text" class="form-control" id="edit-cronExpr" placeholder="cron表达式">
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary">保存</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
 <script>
     $(document).ready(function () {
         //绑定事件
         $("#job-list").on("click",".edit-job",function (event) {
-            console.log("编辑按钮")
+            $("#edit-name").val($(this).parents("tr").children(".job-name").text())
+            $("#edit-command").val($(this).parents("tr").children(".job-command").text())
+            $("#edit-cronExpr").val($(this).parents("tr").children(".job-cronExpr").text())
+            $("#edit-modal").show()
         })
         $("#job-list").on("click",".delete-job",function (event) {
             var jobName = $(this).parents("tr").children(".job-name").text()
@@ -66,7 +104,16 @@
             })
         })
         $("#job-list").on("click",".kill-job",function (event) {
-            console.log("强杀按钮")
+            var jobName = $(this).parents("tr").children(".job-name").text()
+            $.ajax({
+                url:"/job/kill",
+                type:"post",
+                dataType: "json",
+                data:{name:jobName},
+                complete:function () {
+                    // window.location.reload()
+                }
+            })
         })
 
         function rebuildJobList() {
