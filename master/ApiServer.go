@@ -3,6 +3,7 @@ package master
 import (
 	"net"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -17,6 +18,7 @@ var (
 
 //保存任务接口
 func handleJobSave(w http.ResponseWriter, r *http.Request) {
+	//任务保存到rtcd中
 
 }
 
@@ -32,14 +34,14 @@ func InitServer() (err error) {
 	mux.HandleFunc("/job/save", handleJobSave)
 
 	//启动tcp监听
-	if listener, err = net.Listen("tcp", ":5051"); err != nil {
+	if listener, err = net.Listen("tcp", ":"+strconv.Itoa(G_config.ApiPort)); err != nil {
 		return
 	}
 
 	//创建http服务器
 	httpServer = &http.Server{
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 5 * time.Second,
+		ReadTimeout:  time.Duration(G_config.ApiReadTimeout) * time.Millisecond,
+		WriteTimeout: time.Duration(G_config.ApiWriteTimeout) * time.Millisecond,
 		Handler:      mux,
 	}
 	//单例赋值
