@@ -20,7 +20,7 @@
     <!--功能按钮-->
     <div class="row">
         <div class="col-md-12">
-            <button type="button" class="bt bt-primary">新建任务</button>
+            <button type="button" class="bt bt-primary" id="new-job">新建任务</button>
         </div>
     </div>
 
@@ -76,7 +76,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                <button type="button" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-primary" id="save-job">保存</button>
             </div>
         </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
@@ -91,6 +91,7 @@
             $("#edit-cronExpr").val($(this).parents("tr").children(".job-cronExpr").text())
             $("#edit-modal").show()
         })
+        //删除任务
         $("#job-list").on("click",".delete-job",function (event) {
             var jobName = $(this).parents("tr").children(".job-name").text()
             $.ajax({
@@ -103,6 +104,7 @@
                 }
             })
         })
+        //强杀任务
         $("#job-list").on("click",".kill-job",function (event) {
             var jobName = $(this).parents("tr").children(".job-name").text()
             $.ajax({
@@ -114,6 +116,26 @@
                     // window.location.reload()
                 }
             })
+        })
+        //编辑保存任务
+        $("#save-job").on("click",function () {
+            var jobInfo = {name:$("#edit-name").val(),command:$("#edit-command").val(),cronExpr:$("#edit-cronExpr").val()}
+            $.ajax({
+                url:"/job/save",
+                type:"post",
+                dataType: "json",
+                data:{job:JSON.stringify(jobInfo)},
+                complete:function () {
+                    window.location.reload()
+                }
+            })
+        })
+        //新建任务
+        $("#new-job").on("click",function () {
+            $("#edit-name").val("")
+            $("#edit-command").val("")
+            $("#edit-cronExpr").val("")
+            $("#edit-modal").show()
         })
 
         function rebuildJobList() {
