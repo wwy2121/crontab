@@ -120,3 +120,21 @@ func (jobMgr *JobMgr) ListJobs() (jobList []*common.Job, err error) {
 	}
 	return
 }
+
+//强杀任务
+func (jobMgr *JobMgr) KillJob(name string) (err error) {
+	var (
+		killerKey      string
+		leaseGrantResp *clientv3.LeaseGrantResponse
+		leaseId        clientv3.LeaseID
+	)
+	killerKey = common.JOB_KILLER_DIR + name
+	if leaseGrantResp, err = jobMgr.lease.Grant(context.TODO(), 1); err != nil {
+		return
+	}
+	leaseId = leaseGrantResp.ID
+	if _, err = jobMgr.kv.Put(context.TODO(), killerKey, "", clientv3.WithLease(leaseId)); err != nil {
+		return
+	}
+	return
+}

@@ -102,6 +102,11 @@ ERR:
 
 }
 
+//强杀任务
+func handleJobKill(resp http.ResponseWriter, req *http.Request) {
+
+}
+
 //初始化服务
 func InitServer() (err error) {
 	var (
@@ -114,6 +119,7 @@ func InitServer() (err error) {
 	mux.HandleFunc("/job/save", handleJobSave)
 	mux.HandleFunc("/job/delete", handleJobDelete)
 	mux.HandleFunc("/job/list", handleJobList)
+	mux.HandleFunc("/job/kill", handleJobKill)
 
 	//启动tcp监听
 	if listener, err = net.Listen("tcp", ":"+strconv.Itoa(G_config.ApiPort)); err != nil {
