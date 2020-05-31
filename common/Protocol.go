@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/json"
 	"github.com/gorhill/cronexpr"
+	"golang.org/x/net/context"
 	"strings"
 	"time"
 )
@@ -23,9 +24,11 @@ type JobSchedulePlan struct {
 
 //任务执行状态
 type JobExecuteInfo struct {
-	Job      *Job
-	PlanTime time.Time //理论上执行时间
-	RealTime time.Time //实际上执行时间
+	Job        *Job
+	PlanTime   time.Time //理论上执行时间
+	RealTime   time.Time //实际上执行时间
+	CancelCtx  context.Context
+	CancelFunc context.CancelFunc
 }
 
 //http返回应答
@@ -77,6 +80,10 @@ func ExtractJobName(jobKey string) string {
 	return strings.TrimPrefix(jobKey, JOB_SAVE_DIR)
 }
 
+func ExtractKillerName(killerKey string) string {
+	return strings.TrimPrefix(killerKey, JOB_SAVE_DIR)
+}
+
 func BuildJobEvent(eventType int, job *Job) (jobEvent *JobEvent) {
 	return &JobEvent{
 		EventType: eventType,
@@ -108,5 +115,6 @@ func BuildExecuteInfo(jobSchedulePlan *JobSchedulePlan) (jobExecuteInfo *JobExec
 		PlanTime: jobSchedulePlan.NextTime,
 		RealTime: time.Now(),
 	}
+	jobExecuteInfo.CancelCtx, jobExecuteInfo.CancelFunc = context.WithCancel(context.TODO())
 	return
 }

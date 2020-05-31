@@ -2,7 +2,6 @@ package worker
 
 import (
 	"crontab/common"
-	"golang.org/x/net/context"
 	"os/exec"
 	"time"
 )
@@ -48,7 +47,7 @@ func (executor *Executor) ExecueJob(info *common.JobExecuteInfo) {
 			//上锁成功后 重置任务开始时间
 			result.StartTime = time.Now()
 			//执行shell命令
-			cmd = exec.CommandContext(context.TODO(), "/bin/bash", "-c", info.Job.Command)
+			cmd = exec.CommandContext(info.CancelCtx, "/bin/bash", "-c", info.Job.Command)
 			//捕获输出
 			ouput, err = cmd.CombinedOutput()
 			//任务结束时间

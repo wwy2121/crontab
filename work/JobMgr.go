@@ -69,6 +69,35 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 	return
 }
 
+func (jobMgr *JobMgr) watchkiller() {
+
+	var (
+		watchChan  clientv3.WatchChan
+		watchResp  clientv3.WatchResponse
+		watchEvent *clientv3.Event
+		jobEvent   *common.JobEvent
+		jobName    string
+		job        *common.Job
+	)
+
+	go func() {
+		watchChan = jobMgr.watcher.Watch(context.TODO(), common.JOB_KILLER_DIR, clientv3.WithPrefix())
+		for watchResp = range watchChan {
+			for _, watchEvent = range watchResp.Events {
+				switch watchEvent.Type {
+				case mvccpb.PUT:
+					jobName = common.ExtractKillerName(string(watchEvent.Kv.Key))
+					job = &common.Job{Name: jobName}
+					jobEvent = common.BuildJobEvent(common.JOB_EVENT_KILL, job)
+					G_scheduler.PushJobEvent(jobEvent)
+				case mvccpb.DELETE:
+				}
+			}
+		}
+
+	}()
+}
+
 func InitJobMgr() (err error) {
 	var (
 		config  clientv3.Config
@@ -96,7 +125,11 @@ func InitJobMgr() (err error) {
 		lease:   lease,
 		watcher: watcher,
 	}
+	//启动任务监听
 	G_jobMgr.watchJobs()
+
+	//启动监听killer
+	G_jobMgr.watchkiller()
 	return
 }
 
