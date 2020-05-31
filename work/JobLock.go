@@ -13,6 +13,7 @@ type JobLock struct {
 	jobName    string
 	cancelFunc context.CancelFunc
 	leaseId    clientv3.LeaseID
+	isLocked   bool
 }
 
 //初始化锁
@@ -26,7 +27,7 @@ func InitJobLock(jobName string, kv clientv3.KV, lease clientv3.Lease) (jobLock 
 }
 
 //尝试上锁
-func (jobLock *JobLock) Try() (err error) {
+func (jobLock *JobLock) TryLock() (err error) {
 	var (
 		leaseGrantResp *clientv3.LeaseGrantResponse
 		cancelCtx      context.Context
@@ -73,6 +74,9 @@ func (jobLock *JobLock) Try() (err error) {
 		goto FAIL
 	}
 	//枪锁成功
+	jobLock.leaseId = leaseId
+	jobLock.cancelFunc = cancelFunc
+	jobLock.isLocked = true
 	return
 
 FAIL:
@@ -81,6 +85,10 @@ FAIL:
 	return
 }
 
+//释放锁
 func (jobLock *JobLock) Unlock() {
-
+	if jobLock.isLocked == true {
+		jobLock.cancelFunc()
+		jobLock.lease.Revoke(context.TODO(), jobLock.leaseId)
+	}
 }

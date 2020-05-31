@@ -33,19 +33,31 @@ func (executor *Executor) ExecueJob(info *common.JobExecuteInfo) {
 		//初始化分布式锁
 		jobLock = G_jobMgr.CreateJobLock(info.Job.Name)
 
-		//任务开始事件
+		//任务开始时间
 		result.StartTime = time.Now()
-		//执行shell命令
-		cmd = exec.CommandContext(context.TODO(), "/bin/bash", "-c", info.Job.Command)
-		//捕获输出
-		ouput, err = cmd.CombinedOutput()
-		//任务结束时间
-		result.EndTime = time.Now()
-		result.Output = ouput
-		result.Err = err
-		//回传
-		G_scheduler.PushJobResult(result)
 
+		//上锁
+		err = jobLock.TryLock()
+		//释放锁
+		defer jobLock.Unlock()
+
+		if err != nil {
+			result.Err = err
+			result.EndTime = time.Now()
+		} else {
+			//上锁成功后 重置任务开始时间
+			result.StartTime = time.Now()
+			//执行shell命令
+			cmd = exec.CommandContext(context.TODO(), "/bin/bash", "-c", info.Job.Command)
+			//捕获输出
+			ouput, err = cmd.CombinedOutput()
+			//任务结束时间
+			result.EndTime = time.Now()
+			result.Output = ouput
+			result.Err = err
+			//回传
+			G_scheduler.PushJobResult(result)
+		}
 	}()
 }
 
