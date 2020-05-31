@@ -19,16 +19,20 @@ var (
 func (executor *Executor) ExecueJob(info *common.JobExecuteInfo) {
 	go func() {
 		var (
-			cmd    *exec.Cmd
-			err    error
-			ouput  []byte
-			result *common.JobExecuteResult
+			cmd     *exec.Cmd
+			err     error
+			ouput   []byte
+			result  *common.JobExecuteResult
+			jobLock *JobLock
 		)
 		//任务结果
 		result = &common.JobExecuteResult{
 			ExecuteInfo: info,
 			Output:      make([]byte, 0),
 		}
+		//初始化分布式锁
+		jobLock = G_jobMgr.CreateJobLock(info.Job.Name)
+
 		//任务开始事件
 		result.StartTime = time.Now()
 		//执行shell命令
