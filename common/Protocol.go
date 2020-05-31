@@ -21,6 +21,13 @@ type JobSchedulePlan struct {
 	NextTime time.Time
 }
 
+//任务执行状态
+type JobExecuteInfo struct {
+	Job      *Job
+	PlanTime time.Time //理论上执行时间
+	RealTime time.Time //实际上执行时间
+}
+
 //http返回应答
 type Response struct {
 	Errno int    `json:"errno"`
@@ -31,6 +38,14 @@ type Response struct {
 type JobEvent struct {
 	EventType int
 	Job       *Job
+}
+
+type JobExecuteResult struct {
+	ExecuteInfo *JobExecuteInfo
+	Output      []byte
+	Err         error
+	StartTime   time.Time
+	EndTime     time.Time
 }
 
 func BuildResponse(errno int, msg string, data interface{}) (rep []byte, err error) {
@@ -84,5 +99,14 @@ func BuildJobSchedulePlan(job *Job) (jobSchedulePlan *JobSchedulePlan, err error
 		NextTime: expr.Next(time.Now()),
 	}
 	return
+}
 
+//构造执行状态信息
+func BuildExecuteInfo(jobSchedulePlan *JobSchedulePlan) (jobExecuteInfo *JobExecuteInfo) {
+	jobExecuteInfo = &JobExecuteInfo{
+		Job:      jobSchedulePlan.Job,
+		PlanTime: jobSchedulePlan.NextTime,
+		RealTime: time.Now(),
+	}
+	return
 }
