@@ -55,9 +55,9 @@ func (executor *Executor) ExecueJob(info *common.JobExecuteInfo) {
 			result.EndTime = time.Now()
 			result.Output = ouput
 			result.Err = err
-			//回传
-			G_scheduler.PushJobResult(result)
 		}
+		//回传
+		G_scheduler.PushJobResult(result)
 	}()
 }
 
