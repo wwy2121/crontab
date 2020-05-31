@@ -38,6 +38,11 @@ func main() {
 		goto ERR
 	}
 
+	//初始化服务发现
+	if err = master.InitWorkerMgr(); err != nil {
+		goto ERR
+	}
+
 	//任务管理器
 	if err = master.InitJobMgr(); err != nil {
 		goto ERR
